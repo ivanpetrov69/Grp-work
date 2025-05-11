@@ -2,10 +2,203 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>My Simple Page</title>
+  <meta charset="UTF-8">
+  <title>Product Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 20px;
+    }
+    .content {
+      margin-top: 20px;
+    }
+    .product-card {
+      width: 250px;
+      padding: 15px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .product-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+    .product-card h3 {
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .product-card p {
+      font-size: 1rem;
+      color: #777;
+    }
+    .product-card .price {
+      font-size: 1.2rem;
+      color: #28a745;
+    }
+    .product-card button {
+      padding: 5px 10px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .product-card button:hover {
+      background-color: #c0392b;
+    }
+    .product-card button.update {
+      background-color: #f39c12;
+    }
+    .product-card button.update:hover {
+      background-color: #e67e22;
+    }
+    select, input, button {
+      padding: 10px;
+      margin: 10px;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+  </style>
 </head>
 <body>
-    <h1>Hello, this is a simple Project for our Group!</h1>
+
+  <h1>Product Management</h1>
+
+  <!-- Dropdown menu to select between Add and View -->
+  <select id="crudSelector">
+    <option value="add-product">Add Product</option>
+    <option value="view-products">View Products</option>
+  </select>
+
+  <!-- Content area to dynamically change -->
+  <div class="content" id="content-area">
+    <!-- Default content will be the Add Product form -->
+    <div id="add-product-form" class="crud-section">
+      <h2>Add a New Product</h2>
+      <form id="product-form" enctype="multipart/form-data">
+        <label>Product Name:</label>
+        <input type="text" name="name" required>
+        
+        <label>Price ($):</label>
+        <input type="number" name="price" step="0.01" required>
+        
+        <label>Description:</label>
+        <textarea name="description" rows="4" required></textarea>
+        
+        <label>Category:</label>
+        <select name="category" required>
+          <option value="">-- Select --</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Clothing">Clothing</option>
+          <option value="Accessories">Accessories</option>
+          <option value="Books">Books</option>
+        </select>
+        
+        <label>Stock Quantity:</label>
+        <input type="number" name="stock" required>
+        
+        <label>Product Image:</label>
+        <input type="file" name="image" accept="image/*" required>
+        
+        <button type="submit">Add Product</button>
+      </form>
+    </div>
+
+    <!-- View Products -->
+    <div id="view-products" class="crud-section">
+      <h2>Products</h2>
+      <div id="products-container"></div>
+    </div>
+  </div>
+
+  <script>
+    // Show corresponding section when dropdown changes
+    document.getElementById('crudSelector').addEventListener('change', function() {
+      const selected = this.value;
+      const addProductSection = document.getElementById('add-product-form');
+      const viewProductsSection = document.getElementById('view-products');
+      
+      if (selected === 'add-product') {
+        addProductSection.style.display = 'block';
+        viewProductsSection.style.display = 'none';
+      } else {
+        addProductSection.style.display = 'none';
+        viewProductsSection.style.display = 'block';
+        fetchProducts();
+      }
+    });
+
+    // Function to fetch and display products
+    function fetchProducts() {
+      fetch('/get-products')
+        .then(response => response.json())
+        .then(products => {
+          const container = document.getElementById('products-container');
+          container.innerHTML = '';
+          products.forEach(product => {
+            const card = document.createElement('div');
+            card.classList.add('product-card');
+            card.innerHTML = `
+              <img src="${product.imageUrl}" alt="${product.name}">
+              <h3>${product.name}</h3>
+              <p>${product.description}</p>
+              <p class="price">$${product.price}</p>
+              <button class="update" onclick="updateProduct('${product._id}')">Update</button>
+              <button onclick="deleteProduct('${product._id}')">Delete</button>
+            `;
+            container.appendChild(card);
+          });
+        });
+    }
+
+    // Add product via AJAX
+    document.getElementById('product-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      const formData = new FormData(this);
+      
+      fetch('/add-product', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert('Product added successfully!');
+        // Reset form and switch to view products
+        document.getElementById('product-form').reset();
+        document.getElementById('crudSelector').value = 'view-products';
+        document.getElementById('crudSelector').dispatchEvent(new Event('change'));
+      })
+      .catch(err => console.error('Error:', err));
+    });
+
+    // Delete product function
+    function deleteProduct(productId) {
+      fetch(`/delete-product/${productId}`, { method: 'DELETE' })
+        .then(() => fetchProducts());
+    }
+
+    // Update product function (can be implemented similarly)
+    function updateProduct(productId) {
+      alert('Implement update logic for product with ID: ' + productId);
+    }
+
+    // Initialize view products by default
+    document.getElementById('crudSelector').dispatchEvent(new Event('change'));
+  </script>
+
 </body>
 </html>
