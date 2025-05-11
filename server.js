@@ -5,6 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const dotenv = require('dotenv');
 const fs = require('fs');
+const uri = "mongodb+srv://irumvaivanpetrov:<db_password>@grp-work.bclou3b.mongodb.net/?retryWrites=true&w=majority&appName=Grp-work";
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected'))
   .catch((err) => console.log('Error connecting to MongoDB: ', err));
 
